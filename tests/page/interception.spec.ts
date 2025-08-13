@@ -125,6 +125,14 @@ it('should work with glob', async () => {
   expect(urlMatches('http://playwright.dev/foo', 'http://playwright.dev/foo?bar', '\\\\?bar')).toBeTruthy();
   expect(urlMatches('http://first.host/', 'http://second.host/foo', '**/foo')).toBeTruthy();
   expect(urlMatches('http://playwright.dev/', 'http://localhost/', '*//localhost/')).toBeTruthy();
+
+  // At cd437c972d570aef2c32d2ab19b40021eea5706c, `urlMatches(baseURL, urlString, match)` no longer converts the
+  // wanted URL's (`match`) hostname to lowercase before comparing with the actual URL's (`urlString`) hostname.
+  expect(urlMatches(undefined, 'https://playwright.dev/foobar', 'https://PLAYWRIGHT.dev/foobar')).toBeFalsy();
+
+  // Paths are always case-sensitive.
+  expect(urlMatches(undefined, 'https://playwright.dev/FOOBAR', 'https://playwright.dev/foobar')).toBeFalsy();
+  expect(urlMatches(undefined, 'https://playwright.dev/foobar', 'https://playwright.dev/FOOBAR')).toBeFalsy();
 });
 
 it('should intercept by glob', async function({ page, server, isAndroid }) {
