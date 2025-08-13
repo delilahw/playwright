@@ -16,7 +16,7 @@
  */
 
 import { test as it, expect } from './pageTest';
-import { globToRegex } from '../../packages/playwright-core/lib/utils/isomorphic/urlMatch';
+import { globToRegex, urlMatches } from '../../packages/playwright-core/lib/utils/isomorphic/urlMatch';
 import vm from 'vm';
 
 it('should work with navigation @smoke', async ({ page, server }) => {
@@ -105,6 +105,14 @@ it('should work with glob', async () => {
   expect(globToRegex('\\[')).toEqual(/^\[$/);
   expect(globToRegex('[a-z]')).toEqual(/^[a-z]$/);
   expect(globToRegex('$^+.\\*()|\\?\\{\\}\\[\\]')).toEqual(/^\$\^\+\.\*\(\)\|\?\{\}\[\]$/);
+
+  // At 218e4e90aa1f4965ad7f2c400070e65b57145a62, `urlMatches(baseURL, urlString, match)` converts the
+  // wanted URL's (`match`) hostname to lowercase before comparing with the actual URL's (`urlString`) hostname.
+  expect(urlMatches(undefined, 'https://playwright.dev/foobar', 'https://PLAYWRIGHT.dev/foobar')).toBeTruthy();
+
+  // Paths are always case-sensitive.
+  expect(urlMatches(undefined, 'https://playwright.dev/FOOBAR', 'https://playwright.dev/foobar')).toBeFalsy();
+  expect(urlMatches(undefined, 'https://playwright.dev/foobar', 'https://playwright.dev/FOOBAR')).toBeFalsy();
 });
 
 it('should intercept network activity from worker', async function({ page, server, isAndroid }) {
